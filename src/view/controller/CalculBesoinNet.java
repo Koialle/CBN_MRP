@@ -1,4 +1,3 @@
-
 package view.controller;
 
 import javafx.application.Application;
@@ -9,7 +8,9 @@ import javafx.stage.WindowEvent;
 
 /**
  * Class CBN_MRP
- * @author Epulapp
+ * @author Mélanie DUBREUIL
+ * @author Ophélie EOUZAN
+ * 
  */
 public class CalculBesoinNet extends Application {
 
