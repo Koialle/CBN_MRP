@@ -18,6 +18,12 @@ public class BesoinNet {
         this.stock = stock;
         this.semaine = semaine;
     }
+    
+    /*
+    *
+    * Getters et Setters
+    *
+    */
 
     public void setBesoinBrut(double besoinBrut) {
         this.besoinBrut = besoinBrut;
@@ -74,6 +80,4 @@ public class BesoinNet {
     public double getSemaine() {
         return semaine;
     }
-    
-    
 }

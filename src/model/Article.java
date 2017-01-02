@@ -3,6 +3,7 @@ package model;
 import static java.lang.Double.max;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Class Article
@@ -18,6 +19,12 @@ public class Article {
     public Article() {
         listeBesoinsNets = new HashMap<>();
     }
+    
+    /*
+    *
+    * Getters et Setters
+    *
+    */
     
     public String getTypeGestion() {
         return typeGestion;
@@ -83,6 +90,45 @@ public class Article {
         return codeArticle;
     }
     
+    public BesoinNet getBesoinNet(int semaine){
+        return listeBesoinsNets.get(semaine);
+    }
+    
+    /*
+    *
+    * Méthodes utilisées dans le cadre de l'utilisation de la collection HashMap
+    *
+    */
+    
+    @Override
+    public boolean equals(Object o) {
+        if(o == null) {
+            return false;
+        }
+        if(!(o instanceof Article)) {
+            return false;
+        }        
+        Article other = (Article) o;        
+        if(!this.codeArticle.equals(other.getCodeArticle())){
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 97 * hash + Objects.hashCode(this.codeArticle);
+        return hash;
+    }
+    
+    /**
+    * Calcul du besoin brut d'un article pour une semaine S
+    *
+    * @param  semaine  numéro de la semaine pour laquelle on souhaite calculer le besoin brut
+    * @param besoin valeur du besoin brut lu dans le fichier excel
+    * 
+    */
     public void calculBesoinBrut(int semaine, double besoin){
         BesoinNet bn;
         if(this.getListeBesoinsNets().containsKey(semaine)) {
@@ -94,20 +140,14 @@ public class Article {
         this.listeBesoinsNets.put(semaine, bn);
     }
     
-    public void initialiserBesoinsNets(int nbSemaines){
-        if(this.listeBesoinsNets.isEmpty()){
-            for (int semaine = 1; semaine < nbSemaines ; semaine++){
-                this.listeBesoinsNets.put(semaine, new BesoinNet(0, 0, 0, 0, 0, 0, semaine));
-            }
-        }
-    }
-    public BesoinNet getBesoinNet(int semaine){
-        return listeBesoinsNets.get(semaine);
-    }
-    
+    /**
+    * Calcul de besoin net de chaque article sur le nombre de semaines de l'exercice
+    *
+    * @param  nbSemainesExercice  Nombres de semaines de l'exerice
+    * 
+    */
     public void calculBesoinNet(int nbSemainesExercice){
-        for (int semaine = 1; semaine < nbSemainesExercice ; semaine++){
-            
+        for (int semaine = 1; semaine <= nbSemainesExercice ; semaine++){            
             /* 1 - Calcul du besoin net */
             double besoinNet = 0;
             if(semaine != 1){
@@ -122,7 +162,7 @@ public class Article {
             this.getBesoinNet(semaine).setBesoinNet(besoinNet);
             
             /* 2 - Calcul de la suggestion de vente */
-            calculerSuggestion(semaine);
+            calculSuggestion(semaine);
             
             /* 3 - Calcul de stock en fin de période*/
             double stock = 0;
@@ -141,23 +181,37 @@ public class Article {
         }
     }
     
-    public double calculerSuggestion(int semaine){  
+    /**
+    * Retourne la liste des parents (avec le coefficient associé) d'un article dans la nomenclature.
+    *
+    * @param  semaine  Semaine courante du calcul
+    */
+    public void calculSuggestion(int semaine){
+        // Prise en compte du type de gestion
         switch(typeGestion){
             case ">" :
-                if(this.getBesoinNet(semaine).getBesoinNet() < this.getQuantitéLancement()){
-                    this.getBesoinNet(semaine).setSuggestion(this.getQuantitéLancement());
-                    if ((semaine-(int)this.getDélai()) > 0){
-                        this.getBesoinNet(semaine-(int)this.getDélai()).setLancement(this.getQuantitéLancement());
-                    }
-                } else {
-                    this.getBesoinNet(semaine).setSuggestion(this.getBesoinNet(semaine).getBesoinNet());
-                    if ((semaine-(int)this.getDélai()) > 0){
-                        this.getBesoinNet(semaine-(int)this.getDélai()).setLancement(this.getBesoinNet(semaine).getBesoinNet());
+                // Suggestion et livraison uniquement s'il y a un besoin net
+                if(this.getBesoinNet(semaine).getBesoinNet() != 0){
+                    // Si le besoin net est inférieur à la quantité de lancement, suggestion = quantité de lancement
+                    if(this.getBesoinNet(semaine).getBesoinNet() < this.getQuantitéLancement()){
+                        this.getBesoinNet(semaine).setSuggestion(this.getQuantitéLancement());
+                        // On regarde que le délai ne soit pas en dehors de l'exercice
+                        if ((semaine-(int)this.getDélai()) > 0){
+                            this.getBesoinNet(semaine-(int)this.getDélai()).setLancement(this.getQuantitéLancement());
+                        }
+                    } else {
+                        // Sinon, suggestion = besoin net
+                        this.getBesoinNet(semaine).setSuggestion(this.getBesoinNet(semaine).getBesoinNet());
+                        if ((semaine-(int)this.getDélai()) > 0){
+                            this.getBesoinNet(semaine-(int)this.getDélai()).setLancement(this.getBesoinNet(semaine).getBesoinNet());
+                        }
                     }
                 }
             break;
             case "=" :
+                // Suggestion et livraison uniquement s'il y a un besoin net
                 if(this.getBesoinNet(semaine).getBesoinNet() != 0){
+                    // Suggestion = quantité de lancement
                     double quantitéX = this.getBesoinNet(semaine).getBesoinNet();
                     this.getBesoinNet(semaine).setSuggestion(quantitéX);
                     if ((semaine-(int)this.getDélai()) > 0){
@@ -166,9 +220,11 @@ public class Article {
                 }
             break;
             case "X":
+                // Suggestion et livraison uniquement s'il y a un besoin net
                 if(this.getBesoinNet(semaine).getBesoinNet() != 0){
+                    // suggestion = multiple de la quantité de lancement
                     double quantitéX = this.getQuantitéLancement();
-                    while (quantitéX < this.getBesoinNet(semaine).getBesoinNet()){
+                    while (quantitéX <= this.getBesoinNet(semaine).getBesoinNet()){
                         quantitéX = quantitéX + quantitéX;
                     }
                     this.getBesoinNet(semaine).setSuggestion(quantitéX);
@@ -181,9 +237,31 @@ public class Article {
             break;
             default:
         }
-        return 0;
     }
     
+    /**
+    * Initialisation de tous les besoins nets de tous les articles à zéro
+    *
+    * @param  nbSemaines  Nombres de semaines de l'exerice
+    * 
+    */
+    public void initialiserBesoinsNets(int nbSemaines){
+        if(this.listeBesoinsNets.isEmpty()){
+            for (int semaine = 1; semaine <= nbSemaines ; semaine++){
+                this.listeBesoinsNets.put(semaine, new BesoinNet(0, 0, 0, 0, 0, 0, semaine));
+            }
+        }
+    }
+    
+    /**
+    * Affiche les besoins nets calculés chaque semaine pour chaque article selon le format suivant :
+    * ____________  __________
+    *|Besoin brut ||Besoin net|
+    *|Livraison   ||Suggestion|
+    *|Lancement   ||Stock     |
+    * ____________  __________
+    * 
+    */
     public void afficherBesoinsNets(){
         System.out.println("/*******************");
         System.out.println("/*******************");

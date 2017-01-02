@@ -22,25 +22,60 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class LecteurExcel {
     
-    public int retournerNbSemaines(String excelUrl){
-        int nbSemaines = 0;
-        
-        try {
+     /*
+    *
+    * Récupère les arrivées prévues dans le fichier excel
+    *
+    */
+    public void calculerArrivéesPrévues(String excelUrl, Nomenclature n){
+       try {
             FileInputStream fis = null;
             File myFile = new File(excelUrl);
             fis = new FileInputStream(myFile);
             XSSFWorkbook myWorkBook = new XSSFWorkbook (fis);
-            XSSFSheet mySheet = myWorkBook.getSheetAt(2);
-            nbSemaines = mySheet.getRow(1).getPhysicalNumberOfCells() - 1;
+            XSSFSheet mySheet = myWorkBook.getSheetAt(1);
+            boolean check = false;
+            Article articleActuel = new Article();            
+            Iterator <Row> rowIterator = mySheet.iterator();
             
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+                Iterator<Cell> cellIterator = row.cellIterator();
+                while (cellIterator.hasNext()) {
+                    Cell cell = cellIterator.next();
+                    switch (cell.getColumnIndex()){
+                        case 0:
+                            if (check){
+                                articleActuel = n.rechercheArticleParCode(cell.getStringCellValue());
+                            }
+                        break;
+                        case 7: 
+                            if(check && (cell.getNumericCellValue() != 0)){
+                                articleActuel.getBesoinNet(1).setLivraison(cell.getNumericCellValue());
+                            }
+                        break;
+                        case 8:
+                            if(check && (cell.getNumericCellValue() != 0)){
+                                articleActuel.getBesoinNet(2).setLivraison(cell.getNumericCellValue());
+                            }
+                        break;
+                        default :
+                    }
+                }
+                check = true;
+            }
         } catch (FileNotFoundException ex) {
             Logger.getLogger(LecteurExcel.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(LecteurExcel.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return nbSemaines;
+        }       
     }
     
+    /*
+    *
+    * Récupère les lignes de l'onglet paramètres pour créer les objets articles
+    *
+    */
     public void creerArticles(String excelUrl, Nomenclature n){
        try {
             FileInputStream fis = null;
@@ -101,6 +136,11 @@ public class LecteurExcel {
         }       
     }
     
+    /*
+    *
+    * Récupère les lignes de l'onglet nomenclature pour créer les objets liens
+    *
+    */
     public void creerLiens(String excelUrl, Nomenclature n){
         try {
             FileInputStream fis = null;
@@ -114,8 +154,7 @@ public class LecteurExcel {
             while (rowIterator.hasNext()) {
                 Lien l = new Lien();
                 Row row = rowIterator.next();
-                Iterator<Cell> cellIterator = row.cellIterator();
-                
+                Iterator<Cell> cellIterator = row.cellIterator();                
                 while (cellIterator.hasNext()) {
                     Cell cell = cellIterator.next();
                     switch (cell.getColumnIndex()) {
@@ -147,6 +186,12 @@ public class LecteurExcel {
         }       
     }
     
+    /*
+    *
+    * Récupère les prévisions et commandes du 3e onglet du fichier excel
+    * Pour initialiser les besoins bruts des articles
+    *
+    */
     public void initialisationBesoinsBruts(String excelUrl, Nomenclature n){
         try {
             FileInputStream fis = null;
@@ -160,8 +205,7 @@ public class LecteurExcel {
             
             while (rowIterator.hasNext()) {
                 Row row = rowIterator.next();
-                Iterator<Cell> cellIterator = row.cellIterator();
-                
+                Iterator<Cell> cellIterator = row.cellIterator();                
                 while (cellIterator.hasNext()) {
                     Cell cell = cellIterator.next();
                     switch (cell.getColumnIndex()) {
@@ -185,47 +229,25 @@ public class LecteurExcel {
         }       
     }
     
-    public void calculerArrivéesPrévues(String excelUrl, Nomenclature n){
-       try {
+    /*
+    *
+    * Calcule le nombre de semaines de l'exercice
+    *
+    */
+    public int retournerNbSemaines(String excelUrl){
+        int nbSemaines = 0;
+        try {
             FileInputStream fis = null;
             File myFile = new File(excelUrl);
             fis = new FileInputStream(myFile);
             XSSFWorkbook myWorkBook = new XSSFWorkbook (fis);
-            XSSFSheet mySheet = myWorkBook.getSheetAt(1);
-            boolean check = false;
-            Article articleActuel = new Article();
-            
-            Iterator <Row> rowIterator = mySheet.iterator();
-            while (rowIterator.hasNext()) {
-                Row row = rowIterator.next();
-                Iterator<Cell> cellIterator = row.cellIterator();
-                while (cellIterator.hasNext()) {
-                    Cell cell = cellIterator.next();
-                    switch (cell.getColumnIndex()){
-                        case 0:
-                            if (check){
-                                articleActuel = n.rechercheArticleParCode(cell.getStringCellValue());
-                            }
-                        break;
-                        case 7: 
-                            if(check && (cell.getNumericCellValue() != 0)){
-                                articleActuel.getBesoinNet(1).setLivraison(cell.getNumericCellValue());
-                            }
-                        break;
-                        case 8:
-                            if(check && (cell.getNumericCellValue() != 0)){
-                                articleActuel.getBesoinNet(2).setLivraison(cell.getNumericCellValue());
-                            }
-                        break;
-                        default :
-                    }
-                }
-                check = true;
-            }
+            XSSFSheet mySheet = myWorkBook.getSheetAt(2);
+            nbSemaines = mySheet.getRow(1).getPhysicalNumberOfCells() - 1;
         } catch (FileNotFoundException ex) {
             Logger.getLogger(LecteurExcel.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(LecteurExcel.class.getName()).log(Level.SEVERE, null, ex);
-        }       
+        }
+        return nbSemaines;
     }
 }

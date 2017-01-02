@@ -9,7 +9,13 @@ package model;
 public class Lien {
     Article composant, composé;
     double coefficientLien;
-
+    
+    /*
+    *
+    * Getters et Setters
+    *
+    */
+    
     public Article getComposant() {
         return composant;
     }
@@ -22,7 +28,6 @@ public class Lien {
         return coefficientLien;
     }
     
-    
     public void setComposant(Article composant) {
         this.composant = composant;
     }
@@ -33,9 +38,5 @@ public class Lien {
 
     public void setCoefficientLien(double coefficientLien) {
         this.coefficientLien = coefficientLien;
-    }
-    
-    Article rechercheArticle(Article a){
-        return null;
     }
 }

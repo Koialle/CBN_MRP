@@ -10,7 +10,6 @@ import util.*;
  */
 
 public class Main {
-    
     public static void main (String[] args){
         LecteurExcel er = new LecteurExcel();
         Nomenclature n = new Nomenclature();
@@ -29,6 +28,8 @@ public class Main {
         // ETAPE 4 : Calculer le niveau de chaque article dans la nomenclature (OK)
         // ie. ordre des articles à traiter
         n.calculNiveauNomenclature();
+        
+        n.calculStockDisponible();
         
         // ETAPE 5 : Calculer les besoins bruts (initialisation) (OK)
         er.initialisationBesoinsBruts("C://exemple_calcul_besoin.xlsx", n);
